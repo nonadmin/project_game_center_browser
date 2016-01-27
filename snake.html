@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>snake!</title>
+  <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+  <script src="snake.js"></script>
+  <style>
+  
+  #playarea {
+    width: 500px;
+    height: 500px;
+    border: 1px solid #bbb;
+    overflow: hidden;
+    position: relative;
+    display: inline-block;
+  }
+
+  #snake-head {
+    width: 20px;
+    height: 20px;
+    background-color: #000;
+    z-index: 5;
+    position: absolute;
+  }
+
+  #food {
+    width: 20px;
+    height: 20px;
+    background-color: red;
+    z-index: 5;
+    position: absolute; 
+  }
+  
+  </style>
+</head>
+<body>
+
+<p>Score: </p>
+
+<div id="playarea"></div>
+
+<div id="snake-head"></div>
+
+<div id="food"></div>
+
+</body>
+</html>
