@@ -10,9 +10,17 @@
     width: 500px;
     height: 500px;
     border: 1px solid #bbb;
-    overflow: hidden;
     position: relative;
     display: inline-block;
+  }
+
+  #gutter {
+    width: 458px;
+    height: 458px;
+    border: 1px dashed #ddd;
+    top: 20px;
+    left: 20px;
+    position: absolute;
   }
 
   #snake-head {
@@ -37,11 +45,16 @@
 
 <p>Score: </p>
 
-<div id="playarea"></div>
+<div id="playarea">
+  <div id="gutter">
 
-<div id="snake-head"></div>
+    <div id="snake-head"></div>
+    <div id="food"></div>
+    
+  </div>
+</div>
 
-<div id="food"></div>
+
 
 </body>
 </html>

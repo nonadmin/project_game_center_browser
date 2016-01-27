@@ -27,15 +27,72 @@ var util = {
 
 
 var model = {
-  playAreaSize: 500,
-  snakeHeadSize: 20
+
+  init: function(speed){
+    model.speed = speed;
+    model.currentDirection = {'left': '+=' + model.speed};
+    model.lastKeyCode = 39; // start off going right
+  }
+
 
 };
 
 
 var controller = {
   init: function(){
+    model.init(10);
     view.init();
+    controller.bindKeyPress();
+  },
+
+  playLoop: function(){
+
+  },
+
+  changeDirection: function(keyCode){
+    var changeDirection = {
+      37: function(){
+        console.log('left');
+        return {'left': '-=' + model.speed};
+      },
+      38: function(){
+        console.log('up');
+        return {'top': '-=' + model.speed};
+      },
+      39: function(){
+        console.log('right');
+        return {'left': '+=' + model.speed};
+      },
+      40: function(){
+        console.log('down');
+        return {'top': '+=' + model.speed};
+      }
+    };
+
+    if (changeDirection.hasOwnProperty(keyCode) && 
+        controller.directionAllowed(keyCode)){ 
+      model.currentDirection = changeDirection[keyCode]();
+      model.lastKeyCode = keyCode;
+    }
+  },
+
+
+  directionAllowed: function(keyCode){
+    if (keyCode === 37 && model.lastKeyCode !== 39 || 
+        keyCode === 39 && model.lastKeyCode !== 37 || 
+        keyCode === 38 && model.lastKeyCode !== 40 ||
+        keyCode === 40 && model.lastKeyCode !== 38){
+      return true;
+    } else {
+      return false;
+    }
+  },
+
+
+  bindKeyPress: function(){
+    $('body').on("keydown", function(event){
+      controller.changeDirection(event.which);
+    });
   }
 };
 
@@ -48,28 +105,18 @@ var view = {
     view.food = $("#food");
   },
 
-  placeSnakeHead: function(top, left){
-    view.snakeHead.offset({top: top, left: left})
-  },
+  placeRandomFood: function(){ 
+    var posX = util.rand(0, (458 - 20));
+    var posY = util.rand(0, (458 - 20));
 
-  placeRandomFood: function(){
-    var playAreaPaddedLeft = (view.playArea.offset().left + 10);
-    var playAreaPaddedTop = (view.playArea.offset().top + 10);  
-    var posX = util.rand(playAreaPaddedLeft, (model.playAreaSize - 20 - 10));
-    var posY = util.rand(playAreaPaddedTop, (model.playAreaSize - 20 - 10));
-
-    view.food.offset({top: posY, left: posX});
+    view.food.css({'top': posY, 'left': posX});
 
     if (util.touch(view.food, view.snakeHead)){
-      console.log("whoops!");
       view.placeRandomFood();
     } else {
-      console.log("worked!")
-      return true;
+      return;
     }
   }
-
-  
 
 };
 
