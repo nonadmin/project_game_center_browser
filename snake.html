@@ -20,15 +20,7 @@
     border: 1px dashed #ddd;
     top: 20px;
     left: 20px;
-    position: absolute;
-  }
-
-  #snake-head {
-    width: 20px;
-    height: 20px;
-    background-color: #000;
-    z-index: 5;
-    position: absolute;
+    position: relative;
   }
 
   #food {
@@ -39,6 +31,14 @@
     position: absolute; 
   }
   
+  .snake-piece {
+    width: 20px;
+    height: 20px;
+    background-color: #000;
+    z-index: 5;
+    position: absolute;
+  }
+
   </style>
 </head>
 <body>
@@ -48,7 +48,7 @@
 <div id="playarea">
   <div id="gutter">
 
-    <div id="snake-head"></div>
+    <div id="snake-head" class="snake-piece"></div>
     <div id="food"></div>
     
   </div>
