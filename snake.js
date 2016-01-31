@@ -1,21 +1,24 @@
 "use strict";
 
 var util = {
+
   rand: function(min, max){
     return Math.floor(Math.random() * (max - min + 1)) + min;
   },
+
 
   touch: function(obj, collection){
     var isTouching = false;
     var objRect = obj[0].getBoundingClientRect();
 
-    $.each(collection, function(i, val){
-      var valRect = val.getBoundingClientRect();
+    $.each(collection, function(i, elem){
+      elem = elem instanceof jQuery ? elem[0] : elem;
+      var elemRect = elem.getBoundingClientRect();
 
-        if (objRect.left < valRect.left + valRect.width &&
-            objRect.left + objRect.width > valRect.left &&
-            objRect.top < valRect.top + valRect.height &&
-            objRect.top + objRect.height > valRect.top) {
+        if (objRect.left < elemRect.left + elemRect.width &&
+            objRect.left + objRect.width > elemRect.left &&
+            objRect.top < elemRect.top + elemRect.height &&
+            objRect.top + objRect.height > elemRect.top) {
           isTouching = true;
           return false;
         }
@@ -23,6 +26,7 @@ var util = {
     });
     return isTouching;
   }
+
 };
 
 
@@ -32,8 +36,19 @@ var model = {
     model.gameSpeed = gameSpeed;
     model.currentDirection = {'left': '+=20'};
     model.lastKeyCode = 39; // start off going right
-  }
+  },
 
+
+  increaseSpeed: function(){
+    if (model.gameSpeed > 20){
+      model.gameSpeed -= 10;
+    }
+  },
+
+
+  speed: function(){
+    return (400 - model.gameSpeed);
+  }
 
 };
 
@@ -46,49 +61,22 @@ var controller = {
   },
 
 
-  startGame: function(gameSpeed){
-    model.init(gameSpeed);
-    view.init();
-    model.snakePieces = [];
-    controller.playLoop();
-  },
-
-  playLoop: function(){
-    controller.loopID = setInterval(function(){    
-      //console.log("moving snake")
-      view.moveSnake(model.currentDirection);
-
-      if (view.outOfBounds()) {
-        clearInterval(controller.loopID);
-        controller.startGame(400);
-      }
-
-      if (util.touch(view.snakeHead, view.food)){
-        clearInterval(controller.loopID);
-        controller.growSnake();
-        view.placeRandomFood();
-        model.gameSpeed -= 10;
-        controller.playLoop();
-      }
-    }, model.gameSpeed);
-  },
-
   changeDirection: function(keyCode){
     var changeDirection = {
       37: function(){
-        console.log('left');
+        //console.log('left');
         return {'left': '-=20'};
       },
       38: function(){
-        console.log('up');
+        //console.log('up');
         return {'top': '-=20'};
       },
       39: function(){
-        console.log('right');
+        //console.log('right');
         return {'left': '+=20'};
       },
       40: function(){
-        console.log('down');
+        //console.log('down');
         return {'top': '+=20'};
       }
     };
@@ -98,6 +86,36 @@ var controller = {
       model.currentDirection = changeDirection[keyCode]();
       model.lastKeyCode = keyCode;
     }
+  },
+
+
+  bindKeyPress: function(){
+    $('body').on("keydown", function(event){
+      controller.changeDirection(event.which);
+    });
+  },
+
+
+  startGame: function(gameSpeed){
+    model.init(gameSpeed);
+    view.init();
+    model.snakePieces = [];
+    controller.playLoop();
+  },
+
+
+  playLoop: function(){
+    controller.loopID = setInterval(function(){    
+      view.moveSnake(model.currentDirection);
+
+      if (controller.illegalMove()) {
+        view.destroySnake();
+      }
+
+      if (util.touch(view.snakeHead, view.food)){
+        controller.growSnake();
+      }
+    }, model.gameSpeed);
   },
 
 
@@ -113,40 +131,53 @@ var controller = {
   },
 
 
-  bindKeyPress: function(){
-    $('body').on("keydown", function(event){
-      controller.changeDirection(event.which);
-    });
+  growSnake: function(){
+    model.snakePieces.push(view.newSnakePiece());
+    view.placeRandomFood();
+
+    // increasing game speed!
+    model.increaseSpeed();
+    view.updateStats(model.speed());
+
+    clearInterval(controller.loopID);
+    controller.playLoop();
   },
 
 
-  growSnake: function(){
-    model.snakePieces.push(view.newSnakePiece());
-  }
+  illegalMove: function(){
+    if (!(util.touch(view.snakeHead, view.playArea))){
+      return true;
+    } else if (util.touch(view.snakeHead, model.snakePieces)) {
+      return true;
+    } else {
+      return false;
+    }
+  },
+
 };
 
 
 var view = {
 
-  snakeHead: $("#snake-head"),
-  playArea: $("#playarea"),
-  food: $("#food"),
+  init: function(){
+    view.snakeHead = $("#snake-head");
+    view.playArea = $("#playarea");
+    view.food = $("#food");
+    view.stats = $('span');
+
+    view.updateStats(0);
+    view.snakeHead.show();
+    view.snakeHead.css({'top': '0px', 'left': '0px'});
+    view.placeRandomFood();
+  },
+
 
   newSnakePiece: function(){
     var newPiece = $("<div class='snake-piece'/>").css(view.snakeHead.position());
     $("#gutter").append(newPiece);
     return newPiece;
   },
-
-  init: function(){
-    view.snakeHead = $("#snake-head");
-    view.playArea = $("#playarea");
-    view.food = $("#food");
-
-    $('.snake-piece').not("#snake-head").remove();
-    view.snakeHead.css({'top': '0px', 'left': '0px'});
-    view.placeRandomFood();
-  },
+  
 
   placeRandomFood: function(){ 
     var posX = util.rand(0, (458 - 20));
@@ -161,24 +192,30 @@ var view = {
     }
   },
 
+
   moveSnake: function(direction){
     var nextPos = view.snakeHead.position();
     view.snakeHead.css(direction);
 
+    // iterate through snake "pieces", moving each
     $.each(model.snakePieces, function(index, piece){
       var newPos = nextPos;
       nextPos = piece.position();
       piece.css(newPos);
-    });
-    
+    }); 
   },
 
-  outOfBounds: function(){
-    if (util.touch(view.snakeHead, view.playArea)){
-      return false;
-    } else {
-      return true;
-    }
+
+  updateStats: function(score){
+    view.stats[0].innerHTML = score;
+  },
+
+
+  destroySnake: function(){
+    $('.snake-piece').fadeOut(1000, function(){
+      clearInterval(controller.loopID);
+      controller.startGame(400);
+    });
   }
 
 };
